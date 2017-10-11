@@ -49,6 +49,11 @@ namespace IFS
             // Ensure that required values were read from the config file.  If not,
             // throw so that startup is aborted.
             //
+            if (string.IsNullOrWhiteSpace(InterfaceName))
+            {
+                throw new InvalidConfigurationException("Interface name is invalid.");
+            }
+
             if (string.IsNullOrWhiteSpace(FTPRoot) || !Directory.Exists(FTPRoot))
             {
                 throw new InvalidConfigurationException("FTP root path is invalid.");
