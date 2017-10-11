@@ -11,11 +11,13 @@
 #  all numbers are in octal.
 #
 
-# Local Network
-1#1#              lcm
-1#100#            Thacker
-1#42#             Kay
-1#43#             Boggs
-1#44#             Kaehler
-1#45#             Lampson
+1#                ifs
+42#               Metcalfe
+43#               Boggs
+44#               Ingalls
+45#               Kaehler
+100#              Kay
+103#              Marc
+
+
 
