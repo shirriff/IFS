@@ -33,7 +33,7 @@ namespace IFS.BSP
     /// Provides functionality for maintaining/terminating BSP connections, and the transfer of data
     /// across said connection.
     /// 
-    /// Implementation currenty provides (apparently) proper "windows" for sending data to client;
+    /// Implementation currently provides (apparently) proper "windows" for sending data to client;
     /// only one PUP at a time is accepted for input at the moment.  This should likely be corrected,
     /// but is not likely to improve performance altogether that much.
     /// </summary>
@@ -64,6 +64,8 @@ namespace IFS.BSP
             // The client sends the connection port it prefers to use
             // in the RFC pup.
             _clientConnectionPort = new PUPPort(rfcPup.Contents, 0);
+
+            _originalDestinationPort = rfcPup.DestinationPort;
 
             // If the client doesn't know what network it's on, it's now on ours.
             if (_clientConnectionPort.Network == 0)
@@ -109,8 +111,15 @@ namespace IFS.BSP
         public byte LastMark
         {
             get { return _lastMark; }
-        }        
+        }
 
+        /// <summary>
+        /// Returns the original destination port.
+        /// </summary>
+        public PUPPort OriginalDestinationPort
+        {
+            get { return _originalDestinationPort; }
+        }
         /// <summary>
         /// Performs cleanup on this channel and notifies anyone who's interested that
         /// the channel has been destroyed.
@@ -815,6 +824,7 @@ namespace IFS.BSP
 
         private PUPPort _clientConnectionPort;      // the client port
         private PUPPort _serverConnectionPort;      // the server port we (the server) have established for communication
+        private PUPPort _originalDestinationPort;   // the original server poert
 
         private BSPAck _clientLimits;               // The stats from the last ACK we got from the client.        
         private uint _lastClientRecvPos;            // The client's receive position, as indicated by the last ACK pup received.

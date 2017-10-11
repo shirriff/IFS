@@ -88,6 +88,8 @@ namespace IFS.BSP
             }
 
             UInt32 socketID = SocketIDGenerator.GetNextSocketID();
+            Log.Write(LogType.Error, LogComponent.Exp, "setting up rendezvous on {0} {1} with socketID {2}", p.DestinationPort, p.SourcePort, socketID);
+
             BSPChannel newChannel = new BSPChannel(p, socketID);
             newChannel.OnDestroy += OnChannelDestroyed;
             _activeChannels.Add(socketID, newChannel); 

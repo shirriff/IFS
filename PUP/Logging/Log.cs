@@ -45,6 +45,7 @@ namespace IFS.Logging
         Routing = 0x2000,
 
         Configuration = 0x4000,
+        Exp = 0x8000,
         All = 0x7fffffff
     }
 

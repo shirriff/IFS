@@ -29,6 +29,8 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
+using IFS.Logging;
+
 
 namespace IFS
 {
@@ -85,6 +87,7 @@ namespace IFS
                     {
                         foreach (LivePacketDevice device in LivePacketDevice.AllLocalMachine)
                         {
+                            Log.Write(LogType.Verbose, LogComponent.Ethernet, "Device name: {0}", device.GetNetworkInterface().Name);
                             if (device.GetNetworkInterface().Name.ToLowerInvariant() == Configuration.InterfaceName.ToLowerInvariant())
                             {
                                 Router.Instance.RegisterRAWInterface(device);

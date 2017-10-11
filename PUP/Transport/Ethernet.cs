@@ -121,6 +121,8 @@ namespace IFS.Transport
             // 2nd word: 3mbit destination / source bytes
             // 3rd word: frame type (PUP)
             byte[] encapsulatedFrame = new byte[6 + data.Length];
+            Log.Write(LogType.Verbose, LogComponent.Ethernet, "3mbit send.");
+
 
             // 3mbit Packet length
             encapsulatedFrame[0] = (byte)((data.Length / 2 + 2) >> 8);
@@ -163,6 +165,7 @@ namespace IFS.Transport
             //
             // Filter out encapsulated 3mbit frames and look for PUPs, forward them on.
             //
+
             if ((int)p.Ethernet.EtherType == _3mbitFrameType)
             {
                 Log.Write(LogType.Verbose, LogComponent.Ethernet, "3mbit pup received.");
@@ -195,7 +198,7 @@ namespace IFS.Transport
                     catch(Exception e)
                     {
                         // An error occurred, log it.
-                        Log.Write(LogType.Error, LogComponent.PUP, "Error handling PUP: {0}", e.Message);
+                        Log.Write(LogType.Error, LogComponent.PUP, "Error handling PUP: {0} {1}\n\n{2}", e.Message, e.StackTrace, e.InnerException);
                     }
 
                 }

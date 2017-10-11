@@ -187,6 +187,8 @@ namespace IFS.Gateway
             //
             if (pup.DestinationPort.Network == 0 || pup.DestinationPort.Network == DirectoryServices.Instance.LocalHostAddress.Network)
             {
+                Log.Write(LogType.Verbose, LogComponent.PUP, "Routing incoming packet.");
+
                 _localProtocolDispatcher.ReceivePUP(pup);
             }
             else if (route)
@@ -437,6 +439,7 @@ namespace IFS.Gateway
         private static Router _router = new Router();
 
         private PUPProtocolDispatcher _localProtocolDispatcher;
+
     }
 
     public class RoutingTableEntry

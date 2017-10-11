@@ -107,6 +107,8 @@
     <Compile Include="Console\ConsoleAttributes.cs" />
     <Compile Include="Console\ConsoleCommands.cs" />
     <Compile Include="Console\ConsolePrompt.cs" />
+    <Compile Include="ExternalHost.cs" />
+    <Compile Include="Exp\ExpServer.cs" />
     <Compile Include="CopyDisk\CopyDiskServer.cs" />
     <Compile Include="CopyDisk\DiabloPack.cs" />
     <Compile Include="DirectoryServices.cs" />

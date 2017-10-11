@@ -34,6 +34,12 @@ namespace IFS
             Host = host;
         }
 
+        public HostAddress(PUPPort port)
+        {
+            Network = port.Network;
+            Host = port.Host;
+        }
+
         public byte Network;
         public byte Host;
 
@@ -41,6 +47,22 @@ namespace IFS
         /// Non-existent address
         /// </summary>
         public static HostAddress Empty = new HostAddress(0, 0);
+
+        public override string ToString()
+        {
+            return Network + "#" + Host + "#";
+        }
+
+        public override int GetHashCode()
+        {
+            return 17 * Network.GetHashCode() + Host.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as HostAddress;
+            return other != null && other.Host == Host && other.Network == Network;
+        }
     }
 
     /// <summary>

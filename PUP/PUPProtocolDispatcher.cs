@@ -22,6 +22,7 @@ using IFS.Logging;
 using System;
 using System.Collections.Generic;
 using IFS.CopyDisk;
+using IFS.Exp;
 using IFS.FTP;
 using IFS.Gateway;
 
@@ -57,11 +58,15 @@ namespace IFS
             // something else has set the interface to promiscuous mode, that
             // setting may be overridden.
             //
+            Log.Write(LogType.Verbose, LogComponent.PUP, "PUP received.");
+
+            IFS.HostAddress targetAddress = new IFS.HostAddress(DirectoryServices.Instance.LocalNetwork, pup.DestinationPort.Host);
             if (pup.DestinationPort.Host != 0 &&                                           // Not broadcast.
-                pup.DestinationPort.Host != DirectoryServices.Instance.LocalHost)          // Not our address.
+                pup.DestinationPort.Host != DirectoryServices.Instance.LocalHost &&          // Not our address.
+                !ExternalHost.AcceptAddress(targetAddress))
             {
                 // Do nothing with this PUP.
-                Log.Write(LogType.Verbose, LogComponent.PUP, "PUP is neither broadcast nor for us.  Discarding.");
+                Log.Write(LogType.Verbose, LogComponent.PUP, "PUP {0} is neither broadcast nor for us.  Discarding.", targetAddress);
                 return;
             }
 
@@ -85,13 +90,23 @@ namespace IFS
                     BSPManager.EstablishRendezvous(pup, entry.WorkerType);
                 }
             }
+            else if (ExternalHost.AcceptAddress(new HostAddress(pup.DestinationPort)))
+            {
+                // RTP / BSP protocol.  Pass this to the BSP handler to set up a channel.
+                Log.Write(LogType.Verbose, LogComponent.PUP, "Remote host: Dispatching PUP (source {0}, dest X) to BSP protocol for {0}.", pup.SourcePort, pup.DestinationPort);
+                BSPManager.EstablishRendezvous(pup, typeof(ExternalHostWorker));
+            }
             else if (BSPManager.ChannelExistsForSocket(pup))
             {
                 // An established BSP channel, send data to it.
+                Log.Write(LogType.Normal, LogComponent.PUP, "BSP PUP");
+
                 BSPManager.RecvData(pup);
             }
             else if (EFTPManager.ChannelExistsForSocket(pup))
             {
+                Log.Write(LogType.Normal, LogComponent.PUP, "EFTP PUP");
+
                 EFTPManager.RecvData(pup);
             }
             else
@@ -129,7 +144,8 @@ namespace IFS
             // RTP/BSP based:            
             RegisterProtocol(new PUPProtocolEntry("CopyDisk", 0x15  /* 25B */, ConnectionType.BSP, typeof(CopyDiskWorker)));
             RegisterProtocol(new PUPProtocolEntry("FTP", 0x3, ConnectionType.BSP, typeof(FTPWorker)));
-            RegisterProtocol(new PUPProtocolEntry("Mail", 0x7, ConnectionType.BSP, typeof(FTPWorker)));            
+            RegisterProtocol(new PUPProtocolEntry("Mail", 0x7, ConnectionType.BSP, typeof(FTPWorker)));
+            RegisterProtocol(new PUPProtocolEntry("Experiment", 0x8, ConnectionType.BSP, typeof(ExpWorker)));
 
             // Breath Of Life
             _breathOfLifeServer = new BreathOfLife();

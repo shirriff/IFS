@@ -24,6 +24,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -231,6 +233,19 @@ namespace IFS
             }
         }
 
+  
+
+            //string request = "GET /\r\n";
+            //Byte[] bytesSent = Encoding.ASCII.GetBytes(request);
+            //Byte[] bytesReceived = new Byte[1000];
+
+            //s.Send(bytesSent, bytesSent.Length, 0);
+            //int bytes = 0;
+            //bytes = s.Receive(bytesReceived, bytesReceived.Length, 0);
+            //string data = Encoding.ASCII.GetString(bytesReceived, 0, bytes);
+            //Log.Write(LogType.Verbose, LogComponent.Exp, "Received {0}", data);
+
+
         private void SendNameLookupReply(PUP p)
         {
             //
@@ -252,6 +267,10 @@ namespace IFS
 
             HostAddress address = DirectoryServices.Instance.NameLookup(lookupName);
 
+            if (address == null) {
+                address = ExternalHost.LookupExternalHost(lookupName);
+            }
+
             if (address != null)
             {
                 // We found an address, pack the port into the response.
@@ -265,16 +284,20 @@ namespace IFS
             }
             else
             {
-                // Unknown host, send an error reply
-                string errorString = "Unknown host.";
-                PUPPort localPort = new PUPPort(DirectoryServices.Instance.LocalHostAddress, p.DestinationPort.Socket);
-                PUP errorReply = new PUP(PupType.DirectoryLookupErrorReply, p.ID, p.SourcePort, localPort, Helpers.StringToArray(errorString));
+                    // Unknown host, send an error reply
+                    string errorString = "Unknown host.";
+                    PUPPort localPort = new PUPPort(DirectoryServices.Instance.LocalHostAddress, p.DestinationPort.Socket);
+                    PUP errorReply = new PUP(PupType.DirectoryLookupErrorReply, p.ID, p.SourcePort, localPort, Helpers.StringToArray(errorString));
 
-                Router.Instance.SendPup(errorReply);
+                    Router.Instance.SendPup(errorReply);
 
-                Log.Write(LogType.Verbose, LogComponent.MiscServices, "Host is unknown.");
+                    Log.Write(LogType.Verbose, LogComponent.MiscServices, "Host is unknown.");
+                
             }
         }
+
+
+
 
         private void SendBootFile(PUP p)
         {
