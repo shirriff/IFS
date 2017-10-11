@@ -69,10 +69,18 @@ namespace IFS.Transport
             // Try to set up UDP client.
             try
             {
-                _udpClient = new UdpClient(Configuration.UDPPort, AddressFamily.InterNetwork);
+                _udpClient = new UdpClient(AddressFamily.InterNetwork);                                                           
                 _udpClient.Client.Blocking = true;
                 _udpClient.EnableBroadcast = true;
                 _udpClient.MulticastLoopback = false;
+                Log.Write(LogComponent.UDP, "UDP send on port {0}", Configuration.UDPPort);
+
+                _udpClientRecv = new UdpClient(Configuration.UDPPort + 1, AddressFamily.InterNetwork);
+                _udpClientRecv.Client.Blocking = true;
+                _udpClientRecv.EnableBroadcast = true;
+                _udpClientRecv.MulticastLoopback = false;
+                Log.Write(LogComponent.UDP, "UDP receive on port {0}", Configuration.UDPPort + 1);
+
 
                 //
                 // Grab the broadcast address for the interface so that we know what broadcast address to use
@@ -110,6 +118,7 @@ namespace IFS.Transport
                     e.Message);
 
                 _udpClient = null;
+                _udpClientRecv = null;
             }
         }
 
@@ -144,6 +153,7 @@ namespace IFS.Transport
             // 1st word: length of data following
             // 2nd word: 3mbit destination / source bytes
             // 3rd word: frame type (PUP)
+            Log.Write(LogType.Normal, LogComponent.UDP, "UDP send");
             byte[] encapsulatedFrame = new byte[6 + p.RawData.Length];
 
             // 3mbit Packet length
@@ -191,9 +201,10 @@ namespace IFS.Transport
             encapsulatedFrame[5] = (byte)frameType;
 
             // Actual data
-            data.CopyTo(encapsulatedFrame, 6);            
+            data.CopyTo(encapsulatedFrame, 6);
 
-            // Send as UDP broadcast.            
+            // Send as UDP broadcast.          
+            Log.Write(LogType.Normal, LogComponent.UDP, "UDP send");
             _udpClient.Send(encapsulatedFrame, encapsulatedFrame.Length, _broadcastEndpoint);                        
         }
 
@@ -223,13 +234,15 @@ namespace IFS.Transport
             {
                 try
                 {
+                    Log.Write(LogType.Normal, LogComponent.UDP, "UDP receive");
+
                     PUP pup = new PUP(packetStream, length);
                     _routerCallback(pup, destination != 0);
                 }
                 catch(Exception e)
                 {
                     // An error occurred, log it.
-                    Log.Write(LogType.Error, LogComponent.PUP, "Error handling PUP: {0}", e.Message);
+                    Log.Write(LogType.Error, LogComponent.PUP, "UDP Error handling PUP: {0} {1} {2}", e.Message, e.StackTrace, e.InnerException);
                 }
             }
             else
@@ -258,17 +271,21 @@ namespace IFS.Transport
             // properly.)
             Log.Write(LogComponent.UDP, "UDP Receiver thread started.");
 
-            IPEndPoint groupEndPoint = new IPEndPoint(IPAddress.Any, Configuration.UDPPort);            
+            IPEndPoint groupEndPoint = new IPEndPoint(IPAddress.Broadcast, Configuration.UDPPort);
 
             while (true)
             {
-                byte[] data = _udpClient.Receive(ref groupEndPoint);
+                byte[] data = _udpClientRecv.Receive(ref groupEndPoint);
+                Log.Write(LogComponent.UDP, "UDP Receive.");
 
                 // Drop our own UDP packets.
                 if (!groupEndPoint.Address.Equals(_thisIPAddress))
                 {
-                    Receive(new System.IO.MemoryStream(data));
+                    Log.Write(LogComponent.UDP, "self packet, would drop.");
+
                 }
+                Receive(new System.IO.MemoryStream(data));
+
             }
         }
 
@@ -296,6 +313,8 @@ namespace IFS.Transport
         private Thread _receiveThread;
         
         private UdpClient _udpClient;
+        private UdpClient _udpClientRecv;
+
         private IPEndPoint _broadcastEndpoint;
 
         // The IP address (unicast address) of the interface we're using to send UDP datagrams.
